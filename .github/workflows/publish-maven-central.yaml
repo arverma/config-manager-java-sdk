@@ -35,6 +35,10 @@ jobs:
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: GPG_PASSPHRASE
 
+      - name: Show signing key fingerprint (debug)
+        run: |
+          gpg --list-secret-keys --keyid-format long --with-fingerprint --with-colons
+
       - name: Deploy to Central
         env:
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}

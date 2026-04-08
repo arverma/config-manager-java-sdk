@@ -11,6 +11,13 @@ Generated code is placed under:
 
 Models and APIs use standard Java collections (`java.util.List`, `java.util.Map`, etc.), which map cleanly to Scala via `scala.jdk.CollectionConverters` (Scala 2.13+) or `scala.collection.JavaConverters` (older Scala).
 
+## Documentation (Medium)
+
+Long-form guides for this SDK and its release pipeline:
+
+- [OpenAPI to Maven Central: automate Java SDK client generation with GitHub Actions](https://medium.com/towards-data-engineering/openapi-to-maven-central-automate-java-sdk-client-generation-with-github-actions-8c3efcef3049) — separate API/SDK repos, OpenAPI Generator in Maven, generated code under `target/`, tag-triggered CI.
+- [Publish a Java library to Maven Central with GitHub Actions (2026)](https://medium.com/p/2249800415f1) — verified namespace on Central, user token, GPG signing, `central-publishing-maven-plugin`, and troubleshooting (including keyserver propagation).
+
 ## Consume from Maven Central
 
 After a release is published, add the dependency (no extra `<repository>` block is needed for Central):
@@ -37,7 +44,7 @@ implementation("io.github.arverma:config-manager-java-sdk:0.1.0")
 libraryDependencies += "io.github.arverma" % "config-manager-java-sdk" % "0.1.0"
 ```
 
-Replace `0.1.0` with the latest release version. Publishing from maintainers is documented in [`PUBLISHING.md`](PUBLISHING.md).
+Replace `0.1.0` with the latest release version. Maintainer setup (secrets, GPG, first release) is covered in the [Medium guides](#documentation-medium) above.
 
 ## OpenAPI input (development)
 
@@ -51,7 +58,7 @@ If your layout differs, override the path when building:
 mvn clean install -Dopenapi.spec.path=/absolute/path/to/openapi.yaml
 ```
 
-CI workflows use the published spec on GitHub (`arverma/config-manager`) instead of a sibling path.
+The **publish** workflow uses the published spec on GitHub (`arverma/config-manager`) instead of a sibling path.
 
 ## Build (local)
 
@@ -104,14 +111,8 @@ When you read `List` or `Map` fields from models, convert in Scala with `import 
 
 Besides the JDK, this SDK expects Jackson (JSON) and related libraries on the classpath—the same dependencies declared in this project’s `pom.xml`. They are pulled in transitively when you depend on this artifact from Maven.
 
-## CI/CD
+## Development and release
 
-### OpenAPI sync (manual)
-
-- Run `Sync SDK From Config Manager OpenAPI` from GitHub Actions when you want to regenerate the client and open a PR.
-- Inputs: `source_ref` (default `main`), optional `source_sha` to pin a commit.
-- The OpenAPI spec is fetched from `arverma/config-manager` on GitHub. To use another fork, change `CONFIG_MANAGER_REPO` in `.github/workflows/sync-openapi-sdk.yaml`.
-
-### Maven Central release (tag)
-
-- Push a tag `vX.Y.Z` to run `.github/workflows/publish-maven-central.yaml` and deploy to Central. See [`PUBLISHING.md`](PUBLISHING.md) for secrets and one-time setup.
+- **Local:** Regenerate and test with `mvn clean install` (or `mvn clean generate-sources test`) using a sibling checkout or `-Dopenapi.spec.path=...`. Generated sources live under `target/` (ignored by git).
+- **Release:** Push a tag `vX.Y.Z` to run [`.github/workflows/publish-maven-central.yaml`](.github/workflows/publish-maven-central.yaml), which builds from the remote OpenAPI URL and deploys to Maven Central. Full setup (Sonatype, GPG, GitHub secrets) is in the [Medium guides](#documentation-medium).
+- To point the publish job at a different fork or branch, edit `-Dopenapi.spec.path=...` in that workflow file.
