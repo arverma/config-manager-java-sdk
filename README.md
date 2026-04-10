@@ -1,5 +1,7 @@
 # config-manager-java-sdk
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
 Java client SDK for Config Manager, generated from the OpenAPI specification. The client uses the JDK 11+ `HttpClient` (**native** library) so the SDK stays lightweight and avoids extra HTTP client dependencies.
 
 Published Maven coordinates: **`io.github.arverma:config-manager-java-sdk`** ([Maven Central search](https://central.sonatype.com/search?q=io.github.arverma+config-manager-java-sdk)).
@@ -116,3 +118,7 @@ Besides the JDK, this SDK expects Jackson (JSON) and related libraries on the cl
 - **Local:** Regenerate and test with `mvn clean install` (or `mvn clean generate-sources test`) using a sibling checkout or `-Dopenapi.spec.path=...`. Generated sources live under `target/` (ignored by git).
 - **Release:** Push a tag `vX.Y.Z` to run [`.github/workflows/publish-maven-central.yaml`](.github/workflows/publish-maven-central.yaml), which builds from the remote OpenAPI URL and deploys to Maven Central. Full setup (Sonatype, GPG, GitHub secrets) is in the [Medium guides](#documentation-medium).
 - To point the publish job at a different fork or branch, edit `-Dopenapi.spec.path=...` in that workflow file.
+
+## License
+
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for the full license text. Project attribution is in [NOTICE](NOTICE).
