@@ -109,6 +109,35 @@ object Example extends App {
 
 When you read `List` or `Map` fields from models, convert in Scala with `import scala.jdk.CollectionConverters._` and `.asScala` on the Java collection.
 
+## Authentication
+
+When the Config Manager API has `auth.enabled=true`, protected routes require credentials. **Pipelines and services should use API keys**, not browser OAuth.
+
+Set the `Authorization` header on every request via `ApiClient.setRequestInterceptor`:
+
+```java
+import com.arverma.configmanager.client.ApiClient;
+import com.arverma.configmanager.client.api.NamespacesApi;
+
+ApiClient client = new ApiClient();
+client.updateBaseUri("https://config.example.com/api");
+client.setRequestInterceptor(builder ->
+    builder.header("Authorization", "Bearer cm_live_...")
+);
+
+NamespacesApi namespaces = new NamespacesApi(client);
+namespaces.listNamespaces(null, null);
+```
+
+Create API keys with the upstream CLI (`config-manager auth create-api-key --name <name>`) or bootstrap via Helm secret `AUTH_API_KEYS`. Full setup: [Config Manager auth docs](https://github.com/arverma/config-manager/blob/main/docs/auth.md).
+
+Browser Google OAuth and session cookies are for the web UI only; the SDK does not manage cookies.
+
+## Compatibility and roadmap
+
+- Regenerate this SDK (`mvn clean install`) after upstream [OpenAPI](https://github.com/arverma/config-manager/blob/main/api/openapi.yaml) changes (e.g. new auth routes or `securitySchemes`).
+- Upstream [roadmap](https://github.com/arverma/config-manager/blob/main/docs/roadmap.md): RBAC v2 (viewer/developer roles) may add role-aware behavior later; API keys remain the integration path for machine clients.
+
 ## Runtime dependencies
 
 Besides the JDK, this SDK expects Jackson (JSON) and related libraries on the classpath—the same dependencies declared in this project’s `pom.xml`. They are pulled in transitively when you depend on this artifact from Maven.
