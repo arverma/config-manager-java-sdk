@@ -26,7 +26,7 @@ jobs:
             exit 1
           fi
           echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
-          echo "Publishing ${VERSION} from tag ${TAG}"
+          echo "Publishing SDK ${VERSION} (OpenAPI pin from openapi-compat.properties)"
 
       - name: Set up Java and Maven Central credentials
         uses: actions/setup-java@v4
@@ -49,9 +49,7 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="${{ steps.version.outputs.version }}"
-          # Default: matching Config Manager release tag. Override via repo variable OPENAPI_SPEC_URL.
-          OPENAPI_URL="${OPENAPI_SPEC_URL:-https://raw.githubusercontent.com/arverma/config-manager/v${VERSION}/api/openapi.yaml}"
-          bash .github/scripts/fetch-openapi.sh "${OPENAPI_URL}"
+          bash .github/scripts/resolve-openapi-spec.sh openapi.yaml
           mvn -B -P release clean deploy \
             -Drevision="${VERSION}" \
             -Dopenapi.spec.path="openapi.yaml"

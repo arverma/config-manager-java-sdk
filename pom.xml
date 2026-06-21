@@ -41,7 +41,13 @@
     <maven.compiler.release>11</maven.compiler.release>
     <openapi.generator.version>7.10.0</openapi.generator.version>
     <jackson.version>2.18.2</jackson.version>
+    <!-- Local dev default; CI reads openapi-compat.properties via resolve-openapi-spec.sh -->
     <openapi.spec.path>${project.basedir}/../Config Manager/api/openapi.yaml</openapi.spec.path>
+    <!-- Defaults until properties-maven-plugin loads openapi-compat.properties -->
+    <openapi.spec.repo>arverma/config-manager</openapi.spec.repo>
+    <openapi.spec.ref>main</openapi.spec.ref>
+    <openapi.api.version>0.2.0</openapi.api.version>
+    <server.version.min>0.1.0</server.version.min>
   </properties>
 
   <dependencies>
@@ -73,7 +79,32 @@
   </dependencies>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
     <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>properties-maven-plugin</artifactId>
+        <version>1.2.1</version>
+        <executions>
+          <execution>
+            <phase>initialize</phase>
+            <goals>
+              <goal>read-project-properties</goal>
+            </goals>
+            <configuration>
+              <files>
+                <file>${project.basedir}/openapi-compat.properties</file>
+              </files>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>flatten-maven-plugin</artifactId>

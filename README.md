@@ -6,10 +6,13 @@ Java client SDK for Config Manager, generated from the OpenAPI specification. Th
 
 Published Maven coordinates: **`io.github.arverma:config-manager-java-sdk`** ([Maven Central search](https://central.sonatype.com/search?q=io.github.arverma+config-manager-java-sdk)).
 
+**SDK semver is independent of Config Manager server releases.** See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the API/SDK matrix and release process.
+
 Generated code is placed under:
 
 - `com.arverma.configmanager.client.api` — API classes (one per OpenAPI tag, e.g. `HealthApi`, `AuthApi`, `NamespacesApi`, `ConfigsApi`)
 - `com.arverma.configmanager.client.model` — request/response models
+- `com.arverma.configmanager.client.SdkCompatibility` — runtime metadata (SDK version, OpenAPI contract version, spec pin)
 
 Models and APIs use standard Java collections (`java.util.List`, `java.util.Map`, etc.), which map cleanly to Scala via `scala.jdk.CollectionConverters` (Scala 2.13+) or `scala.collection.JavaConverters` (older Scala).
 
@@ -30,23 +33,23 @@ After a release is published, add the dependency (no extra `<repository>` block 
 <dependency>
   <groupId>io.github.arverma</groupId>
   <artifactId>config-manager-java-sdk</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
 </dependency>
 ```
 
 **Gradle**
 
 ```kotlin
-implementation("io.github.arverma:config-manager-java-sdk:0.1.0")
+implementation("io.github.arverma:config-manager-java-sdk:0.2.0")
 ```
 
 **sbt**
 
 ```scala
-libraryDependencies += "io.github.arverma" % "config-manager-java-sdk" % "0.1.0"
+libraryDependencies += "io.github.arverma" % "config-manager-java-sdk" % "0.2.0"
 ```
 
-Replace `0.1.0` with the latest release version. Maintainer setup (secrets, GPG, first release) is covered in the [Medium guides](#documentation-medium) above.
+Replace with the latest SDK version from [COMPATIBILITY.md](COMPATIBILITY.md) or Maven Central.
 
 ## OpenAPI input (development)
 
@@ -54,13 +57,14 @@ For local builds, this project expects the Config Manager repo as a **sibling di
 
 `../Config Manager/api/openapi.yaml`
 
-If your layout differs, override the path when building:
+If your layout differs, fetch the pinned spec or override the path:
 
 ```bash
-mvn clean install -Dopenapi.spec.path=/absolute/path/to/openapi.yaml
+bash .github/scripts/resolve-openapi-spec.sh openapi.yaml
+mvn clean install -Dopenapi.spec.path=openapi.yaml
 ```
 
-The **publish** workflow uses the published spec on GitHub (`arverma/config-manager`) instead of a sibling path.
+The pin is defined in [`openapi-compat.properties`](openapi-compat.properties) (also used by CI and publish).
 
 ## Build (local)
 
@@ -133,10 +137,23 @@ Create API keys with the upstream CLI (`config-manager auth create-api-key --nam
 
 Browser Google OAuth and session cookies are for the web UI only; the SDK does not manage cookies.
 
-## Compatibility and roadmap
+## Compatibility
 
-- Regenerate this SDK (`mvn clean install`) after upstream [OpenAPI](https://github.com/arverma/config-manager/blob/main/api/openapi.yaml) changes (e.g. new auth routes or `securitySchemes`).
-- Upstream [roadmap](https://github.com/arverma/config-manager/blob/main/docs/roadmap.md): RBAC v2 (viewer/developer roles) may add role-aware behavior later; API keys remain the integration path for machine clients.
+See [`COMPATIBILITY.md`](COMPATIBILITY.md) for the full API/SDK matrix and semver policy.
+
+```java
+import com.arverma.configmanager.client.SdkCompatibility;
+
+// SDK artifact version (Maven)
+SdkCompatibility.sdkVersion();
+
+// OpenAPI contract this build was generated from
+SdkCompatibility.openApiVersion();
+SdkCompatibility.openApiSpecRef();
+SdkCompatibility.minServerVersion();
+```
+
+Upstream [roadmap](https://github.com/arverma/config-manager/blob/main/docs/roadmap.md): RBAC v2 (viewer/developer roles) may add role-aware behavior later; API keys remain the integration path for machine clients.
 
 ## Runtime dependencies
 
@@ -145,20 +162,20 @@ Besides the JDK, this SDK expects Jackson (JSON) and related libraries on the cl
 ## Development and release
 
 - **Local:** Regenerate and test with `mvn clean install` (or `mvn clean generate-sources test`) using a sibling checkout or `-Dopenapi.spec.path=...`. Generated sources live under `target/` (ignored by git).
-- **CI:** Pull requests run [`.github/workflows/build.yaml`](.github/workflows/build.yaml) against Config Manager `main` OpenAPI.
-- **Release:** Push a tag `vX.Y.Z` to run [`.github/workflows/publish-maven-central.yaml`](.github/workflows/publish-maven-central.yaml), which deploys to Maven Central. Full setup (Sonatype, GPG, GitHub secrets) is in the [Medium guides](#documentation-medium).
+- **CI:** Pull requests run [`.github/workflows/build.yaml`](.github/workflows/build.yaml) against the OpenAPI spec pinned in [`openapi-compat.properties`](openapi-compat.properties).
+- **Release:** Push an SDK tag `vX.Y.Z` to run [`.github/workflows/publish-maven-central.yaml`](.github/workflows/publish-maven-central.yaml). The SDK version comes from the tag; the OpenAPI spec comes from the pin file—not from matching version numbers.
 
 ### Releasing after Config Manager API changes
 
 Only required when [Config Manager `api/openapi.yaml`](https://github.com/arverma/config-manager/blob/main/api/openapi.yaml) changes in a client-visible way (new routes, models, security, etc.). Server-only changes do not need a new SDK.
 
-1. Merge the OpenAPI change into Config Manager `main`.
-2. Tag Config Manager `vX.Y.Z` (same version you plan for the SDK).
-3. Run `mvn clean install` locally against the new spec and fix any compile issues.
-4. Push tag `vX.Y.Z` on **this** repo — publish uses `https://raw.githubusercontent.com/arverma/config-manager/vX.Y.Z/api/openapi.yaml` by default.
-5. Tell consumers to bump their Maven dependency to `X.Y.Z`.
+1. Merge the OpenAPI change into Config Manager `main` and bump `info.version` when the contract changes.
+2. Update [`openapi-compat.properties`](openapi-compat.properties): set `openapi.spec.ref` to a **commit SHA or server tag** (not `main` for releases), and `openapi.api.version` to match the spec.
+3. Run `bash .github/scripts/resolve-openapi-spec.sh openapi.yaml && mvn clean install -Dopenapi.spec.path=openapi.yaml` and fix any compile issues.
+4. Choose SDK semver from client-surface changes; add a row to [`COMPATIBILITY.md`](COMPATIBILITY.md).
+5. Push tag `vX.Y.Z` on **this** repo.
 
-To publish from a different OpenAPI URL (e.g. before Config Manager is tagged), set GitHub repo variable `OPENAPI_SPEC_URL` to the raw spec URL.
+Emergency override: set GitHub repo variable `OPENAPI_SPEC_URL` to a full raw spec URL.
 
 ## License
 

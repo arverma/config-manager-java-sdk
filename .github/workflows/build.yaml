@@ -23,11 +23,10 @@ jobs:
           java-version: "11"
           cache: maven
 
-      - name: Build against upstream OpenAPI (main)
+      - name: Build against pinned OpenAPI spec
         env:
           OPENAPI_SPEC_URL: ${{ vars.OPENAPI_SPEC_URL }}
         run: |
           set -euo pipefail
-          OPENAPI_URL="${OPENAPI_SPEC_URL:-https://raw.githubusercontent.com/arverma/config-manager/main/api/openapi.yaml}"
-          bash .github/scripts/fetch-openapi.sh "${OPENAPI_URL}"
+          bash .github/scripts/resolve-openapi-spec.sh openapi.yaml
           mvn -B clean install -Dopenapi.spec.path="openapi.yaml"
