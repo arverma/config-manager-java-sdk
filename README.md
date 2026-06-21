@@ -8,7 +8,7 @@ Published Maven coordinates: **`io.github.arverma:config-manager-java-sdk`** ([M
 
 Generated code is placed under:
 
-- `com.arverma.configmanager.client.api` — API classes (one per OpenAPI tag, e.g. `HealthApi`, `NamespacesApi`, `ConfigsApi`)
+- `com.arverma.configmanager.client.api` — API classes (one per OpenAPI tag, e.g. `HealthApi`, `AuthApi`, `NamespacesApi`, `ConfigsApi`)
 - `com.arverma.configmanager.client.model` — request/response models
 
 Models and APIs use standard Java collections (`java.util.List`, `java.util.Map`, etc.), which map cleanly to Scala via `scala.jdk.CollectionConverters` (Scala 2.13+) or `scala.collection.JavaConverters` (older Scala).
@@ -70,7 +70,7 @@ From this directory:
 mvn clean install
 ```
 
-That runs `openapi-generator-maven-plugin` in the `generate-sources` phase, then compiles the generated sources and installs the JAR to your local Maven repository. The POM uses the `revision` property (default `0.1.0-SNAPSHOT` for development).
+That runs `openapi-generator-maven-plugin` in the `generate-sources` phase, then compiles the generated sources and installs the JAR to your local Maven repository. The POM uses the `revision` property (default `0.2.0-SNAPSHOT` for development).
 
 ## Initialize the client (Java)
 
@@ -145,8 +145,20 @@ Besides the JDK, this SDK expects Jackson (JSON) and related libraries on the cl
 ## Development and release
 
 - **Local:** Regenerate and test with `mvn clean install` (or `mvn clean generate-sources test`) using a sibling checkout or `-Dopenapi.spec.path=...`. Generated sources live under `target/` (ignored by git).
-- **Release:** Push a tag `vX.Y.Z` to run [`.github/workflows/publish-maven-central.yaml`](.github/workflows/publish-maven-central.yaml), which builds from the remote OpenAPI URL and deploys to Maven Central. Full setup (Sonatype, GPG, GitHub secrets) is in the [Medium guides](#documentation-medium).
-- To point the publish job at a different fork or branch, edit `-Dopenapi.spec.path=...` in that workflow file.
+- **CI:** Pull requests run [`.github/workflows/build.yaml`](.github/workflows/build.yaml) against Config Manager `main` OpenAPI.
+- **Release:** Push a tag `vX.Y.Z` to run [`.github/workflows/publish-maven-central.yaml`](.github/workflows/publish-maven-central.yaml), which deploys to Maven Central. Full setup (Sonatype, GPG, GitHub secrets) is in the [Medium guides](#documentation-medium).
+
+### Releasing after Config Manager API changes
+
+Only required when [Config Manager `api/openapi.yaml`](https://github.com/arverma/config-manager/blob/main/api/openapi.yaml) changes in a client-visible way (new routes, models, security, etc.). Server-only changes do not need a new SDK.
+
+1. Merge the OpenAPI change into Config Manager `main`.
+2. Tag Config Manager `vX.Y.Z` (same version you plan for the SDK).
+3. Run `mvn clean install` locally against the new spec and fix any compile issues.
+4. Push tag `vX.Y.Z` on **this** repo — publish uses `https://raw.githubusercontent.com/arverma/config-manager/vX.Y.Z/api/openapi.yaml` by default.
+5. Tell consumers to bump their Maven dependency to `X.Y.Z`.
+
+To publish from a different OpenAPI URL (e.g. before Config Manager is tagged), set GitHub repo variable `OPENAPI_SPEC_URL` to the raw spec URL.
 
 ## License
 
