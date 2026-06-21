@@ -24,6 +24,10 @@ jobs:
           cache: maven
 
       - name: Build against upstream OpenAPI (main)
+        env:
+          OPENAPI_SPEC_URL: ${{ vars.OPENAPI_SPEC_URL }}
         run: |
-          mvn -B clean install \
-            -Dopenapi.spec.path="https://raw.githubusercontent.com/arverma/config-manager/main/api/openapi.yaml"
+          set -euo pipefail
+          OPENAPI_URL="${OPENAPI_SPEC_URL:-https://raw.githubusercontent.com/arverma/config-manager/main/api/openapi.yaml}"
+          bash .github/scripts/fetch-openapi.sh "${OPENAPI_URL}"
+          mvn -B clean install -Dopenapi.spec.path="openapi.yaml"
