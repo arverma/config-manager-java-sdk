@@ -36,7 +36,7 @@
   </scm>
 
   <properties>
-    <revision>0.1.0-SNAPSHOT</revision>
+    <revision>0.2.0-SNAPSHOT</revision>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>11</maven.compiler.release>
     <openapi.generator.version>7.10.0</openapi.generator.version>
